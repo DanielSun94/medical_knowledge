@@ -6,6 +6,8 @@ import re
 from parse_oxford_type_1 import parse_oxford_type_1_dom
 from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path
 
+max_length = 2048
+
 
 def parse_dom(abbreviation, dom, header, doc_format_schema):
     if doc_format_schema == 'oxford_type_1':
@@ -63,8 +65,10 @@ def content_postprocess(path, content_dict):
                                 paragraph_list = doc_content[sec][subsec][subsubsec][subsubsubsec]['text']
                                 for i, paragraph in enumerate(paragraph_list):
                                     key = '; '.join([title, sec_, subsec_, subsubsec_, subsubsubsec_,
-                                                     'paragraph', str(i)])
-                                    content = paragraph.replace('\n', '')
+                                                     'paragraph', str(i)]).strip()[: max_length]
+                                    content = paragraph.replace('\n', '').strip()
+                                    if len(content) > max_length:
+                                        content = content[: max_length]
                                     data_to_write.append([key, content])
 
                                 # 由于VQA功能不成熟，暂时不对图做处理
@@ -79,8 +83,8 @@ def content_postprocess(path, content_dict):
                                 table_dict = doc_content[sec][subsec][subsubsec][subsubsubsec]['table']
                                 for table_name in table_dict:
                                     key = '; '.join([title, sec_, subsec_, subsubsec_, subsubsubsec_, 'table',
-                                                     table_name])
-                                    content = table_dict[table_name].replace('\n', '')
+                                                     table_name])[: max_length]
+                                    content = table_dict[table_name].replace('\n', '')[: max_length]
                                     data_to_write.append([key, content])
     with open(path, 'w', encoding='utf-8-sig', newline='') as f:
         csv.writer(f).writerows(data_to_write)

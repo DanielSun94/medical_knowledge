@@ -2,8 +2,9 @@ import csv
 import os
 import bs4
 import yaml
+import re
 from parse_oxford_type_1 import parse_oxford_type_1_dom
-from util import request_get_with_sleep, cache_folder, resource_path, save_path
+from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path
 
 
 def parse_dom(abbreviation, dom, header, doc_format_schema):
@@ -17,8 +18,8 @@ def parse_dom(abbreviation, dom, header, doc_format_schema):
     return content_dict
 
 
-def get_dom(name, url, header, cache_folder=None, use_cache=True):
-    cache_path = os.path.join(cache_folder, name + '.txt')
+def get_dom(name, url, header, cacher=None, use_cache=True):
+    cache_path = os.path.join(cacher, name + '.txt')
     if use_cache and os.path.exists(cache_path):
         with open(cache_path, 'r', encoding='utf-8-sig') as f:
             in_cache = True
@@ -30,6 +31,60 @@ def get_dom(name, url, header, cache_folder=None, use_cache=True):
             in_cache = False
     dom = bs4.BeautifulSoup(html, 'html.parser')
     return dom, in_cache
+
+
+def discard_section_numer(string):
+    result = re.search(string, "[1-9.]+")
+    # 去除段号
+    if result is not None and result.span()[0] == 0:
+        new_string = string[result.span()[1]:]
+    else:
+        new_string = string
+    return new_string
+
+
+def content_postprocess(path, content_dict):
+    head = ['key', 'content']
+    data_to_write = [head]
+    for society in content_dict:
+        for doc_type in content_dict[society]:
+            for abbreviation in content_dict[society][doc_type]:
+                doc_content = content_dict[society][doc_type][abbreviation]
+                title = doc_content['title']['none']['none']['none']['text'][0]
+                for sec in doc_content:
+                    sec_ = discard_section_numer(sec)
+                    for subsec in doc_content[sec]:
+                        subsec_ = discard_section_numer(subsec)
+                        for subsubsec in doc_content[sec][subsec]:
+                            subsubsec_ = discard_section_numer(subsubsec)
+                            for subsubsubsec in doc_content[sec][subsec][subsubsec]:
+                                subsubsubsec_ = discard_section_numer(subsubsubsec)
+
+                                paragraph_list = doc_content[sec][subsec][subsubsec][subsubsubsec]['text']
+                                for i, paragraph in enumerate(paragraph_list):
+                                    key = '; '.join([title, sec_, subsec_, subsubsec_, subsubsubsec_,
+                                                     'paragraph', str(i)])
+                                    content = paragraph.replace('\n', '')
+                                    data_to_write.append([key, content])
+
+                                # 由于VQA功能不成熟，暂时不对图做处理
+                                # figure_dict = doc_content[sec][subsec][subsubsec][subsubsubsec]['figure']
+                                # for key in figure_dict:
+                                #     key = '; '.format([title, sec_, subsec_, subsubsec_, subsubsubsec_, 'figure', key])
+                                #
+                                #     data_to_write.append([society, doc_type, abbreviation, sec, subsec, subsubsec,
+                                #                           subsubsubsec, 'figure', key,
+                                #                           figure_dict[key].replace('\n', '')])
+
+                                table_dict = doc_content[sec][subsec][subsubsec][subsubsubsec]['table']
+                                for table_name in table_dict:
+                                    key = '; '.join([title, sec_, subsec_, subsubsec_, subsubsubsec_, 'table',
+                                                     table_name])
+                                    content = table_dict[table_name].replace('\n', '')
+                                    data_to_write.append([key, content])
+    with open(path, 'w', encoding='utf-8-sig', newline='') as f:
+        csv.writer(f).writerows(data_to_write)
+
 
 
 def save_content(path, content_dict):
@@ -117,6 +172,7 @@ def main():
                 data_dict[society][doc_type][abbreviation] = content_dict
 
     save_content(save_path, data_dict)
+    content_postprocess(post_file_path, data_dict)
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ oxford_type_1_href_root = "https://academic.oup.com"
 cache_folder = os.path.abspath('./resource/guideline/cache')
 resource_path = os.path.abspath('./resource/guidelines.yaml')
 save_path = os.path.abspath('./resource/guideline/guideline_data.csv')
+post_file_path = os.path.abspath('./resource/guideline/post_guideline_data.csv')
 sep = "<SEP>"
 
 

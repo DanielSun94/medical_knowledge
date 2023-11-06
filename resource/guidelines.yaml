@@ -1,82 +1,96 @@
 documents:
   # To Be Done，主要是做文献拓展
-  esc:
+#  esc:
+#    guidelines:
+#      2021-ESC-Guidelines-management-heart-failure:
+#        url: "https://academic.oup.com/eurheartj/article/42/36/3599/6358045"
+#        doi: "https://doi.org/10.1093/eurheartj/ehab670"
+#        abbreviation: "2021EscGuidelineHF"
+#        journal: "European Heart Journal"
+#      2020-ESC-Guidelines-management-atrial-fibrillation:
+#        url: "https://academic.oup.com/eurheartj/article/42/5/373/5899003"
+#        doi: "https://doi.org/10.1093/eurheartj/ehaa612"
+#        abbreviation: "2021EscGuidelineAF"
+#        journal: "European Heart Journal"
+#      2023-ESC-Guidelines-management-cardiovascular-disease-patients-diabetes:
+#        url: "https://academic.oup.com/eurheartj/article/44/39/4043/7238227"
+#        doi: "https://doi.org/10.1093/eurheartj/ehad192"
+#        abbreviation: '2023EscGuidelineCVDWithDiabetes'
+#        journal: "European Heart Journal"
+#      2023-ESC-Guidelines-management-cardiomyopathies:
+#        url: "https://academic.oup.com/eurheartj/article/44/37/3503/7246608"
+#        doi: "https://doi.org/10.1093/eurheartj/ehad194"
+#        abbreviation: '2023EscGuidelineCardiomyopathies'
+#        journal: "European Heart Journal"
+#      2021-ESC-Guidelines-management-valvular-heart-disease:
+#        url: "https://academic.oup.com/eurheartj/article/43/7/561/6358470"
+#        doi: "https://doi.org/10.1093/eurheartj/ehab395"
+#        abbreviation: "2021EscGuidelineVHD"
+#        journal: "European Heart Journal"
+#      2023-Focused-Update-2021-ESC-Guidelines-diagnosis-treatment-acute-chronic-heart-failure:
+#        url: "https://academic.oup.com/eurheartj/article/44/37/3627/7246292"
+#        doi: "https://doi.org/10.1093/eurheartj/ehad195"
+#        abbreviation: "2023EscGuidelineHF"
+#        journal: "European Heart Journal"
+#      2023-ESC-Guidelines-management-acute-coronary-syndromes:
+#        url: "https://academic.oup.com/eurheartj/article/44/38/3720/7243210"
+#        doi: "https://doi.org/10.1093/eurheartj/ehad191"
+#        abbreviation: "2023EscGuidelineACS"
+#        journal: "European Heart Journal"
+#      2023-ESC-Guidelines-management-endocarditis:
+#        url: "https://academic.oup.com/eurheartj/article/44/39/3948/7243107"
+#        doi: "https://doi.org/10.1093/eurheartj/ehad193"
+#        abbreviation: "2023EscGuidelineEndocarditis"
+#        journal: "European Heart Journal"
+#    consensus_and_position_papers:
+#      Consensus-Perivascular-adipose-tissue-source-therapeutic-targets-clinical-biomarkers:
+#        url: "https://academic.oup.com/eurheartj/article/44/38/3827/7246508"
+#        doi: "https://doi.org/10.1093/eurheartj/ehad484"
+#        abbreviation: "PerivascularAdiposeTissueTherapeuticTargets"
+#        journal: "European Heart Journal"
+#      EHRA-clinical-consensus-conduction-system-pacing-implantation:
+#        url: "https://academic.oup.com/europace/article/25/4/1208/7121146"
+#        doi: "https://doi.org/10.1093/europace/euad043"
+#        abbreviation: "EHRAConsensusConductionSystemPacingImplantation"
+#        journal: "EP Europace"
+#      Acute-LDL-C-reduction-post-ACS-strike-early-strong:
+#        url: "https://academic.oup.com/ehjacc/article/11/12/939/6961651"
+#        doi: "https://doi.org/10.1093/ehjacc/zuac123"
+#        abbreviation: "AcuteLDLCReductionPostACS"
+#        journal: "European Heart Journal. Acute Cardiovascular Care"
+#      Management-comatose-survivors-out-of-hospital-cardiac-arrest-Europe:
+#        url: "https://academic.oup.com/ehjacc/article/12/2/96/6862066"
+#        doi: "https://doi.org/10.1093/ehjacc/zuac153"
+#        abbreviation: "ManagementComatoseSurvivorsOutHospitalCardiacArrest"
+#        journal: "European Heart Journal. Acute Cardiovascular Care"
+#      Antithrombotic-treatment-strategies-patients-established-coronary-atherosclerotic-disease:
+#        url: "https://academic.oup.com/ehjcvp/article/9/5/462/7147298"
+#        doi: "https://doi.org/10.1093/ehjcvp/pvad032"
+#        abbreviation: "AntithromboticTreatmentStrategiesCoronaryAtheroscleroticDisease"
+#        journal: "European Heart Journal - Cardiovascular Pharmacotherapy"
+  jacc:
     guidelines:
-      2023-ESC-Guidelines-management-cardiovascular-disease-patients-diabetes:
-        url: "https://academic.oup.com/eurheartj/article/44/39/4043/7238227"
-        doi: "https://doi.org/10.1093/eurheartj/ehad192"
-        abbreviation: '2023EscGuidelineCVDWithDiabetes'
-        journal: "European Heart Journal"
-      2023-ESC-Guidelines-management-cardiomyopathies:
-        url: "https://academic.oup.com/eurheartj/article/44/37/3503/7246608"
-        doi: "https://doi.org/10.1093/eurheartj/ehad194"
-        abbreviation: '2023EscGuidelineCardiomyopathies'
-        journal: "European Heart Journal"
-      2023-Focused-Update-2021-ESC-Guidelines-diagnosis-treatment-acute-chronic-heart-failure:
-        url: "https://academic.oup.com/eurheartj/article/44/37/3627/7246292"
-        doi: "https://doi.org/10.1093/eurheartj/ehad195"
-        abbreviation: "2023EscGuidelineHF"
-        journal: "European Heart Journal"
-      2023-ESC-Guidelines-management-acute-coronary-syndromes:
-        url: "https://academic.oup.com/eurheartj/article/44/38/3720/7243210"
-        doi: "https://doi.org/10.1093/eurheartj/ehad191"
-        abbreviation: "2023EscGuidelineACS"
-        journal: "European Heart Journal"
-      2023-ESC-Guidelines-management-endocarditis:
-        url: "https://academic.oup.com/eurheartj/article/44/39/3948/7243107"
-        doi: "https://doi.org/10.1093/eurheartj/ehad193"
-        abbreviation: "2023EscGuidelineEndocarditis"
-        journal: "European Heart Journal"
-    consensus_and_position_papers:
-      Consensus-Perivascular-adipose-tissue-source-therapeutic-targets-clinical-biomarkers:
-        url: "https://academic.oup.com/eurheartj/article/44/38/3827/7246508"
-        doi: "https://doi.org/10.1093/eurheartj/ehad484"
-        abbreviation: "PerivascularAdiposeTissueTherapeuticTargets"
-        journal: "European Heart Journal"
-      EHRA-clinical-consensus-conduction-system-pacing-implantation:
-        url: "https://academic.oup.com/europace/article/25/4/1208/7121146"
-        doi: "https://doi.org/10.1093/europace/euad043"
-        abbreviation: "EHRAConsensusConductionSystemPacingImplantation"
-        journal: "EP Europace"
-      Acute-LDL-C-reduction-post-ACS-strike-early-strong:
-        url: "https://academic.oup.com/ehjacc/article/11/12/939/6961651"
-        doi: "https://doi.org/10.1093/ehjacc/zuac123"
-        abbreviation: "AcuteLDLCReductionPostACS"
-        journal: "European Heart Journal. Acute Cardiovascular Care"
-      Management-comatose-survivors-out-of-hospital-cardiac-arrest-Europe:
-        url: "https://academic.oup.com/ehjacc/article/12/2/96/6862066"
-        doi: "https://doi.org/10.1093/ehjacc/zuac153"
-        abbreviation: "ManagementComatoseSurvivorsOutHospitalCardiacArrest"
-        journal: "European Heart Journal. Acute Cardiovascular Care"
-      Antithrombotic-treatment-strategies-patients-established-coronary-atherosclerotic-disease:
-        url: "https://academic.oup.com/ehjcvp/article/9/5/462/7147298"
-        doi: "https://doi.org/10.1093/ehjcvp/pvad032"
-        abbreviation: "AntithromboticTreatmentStrategiesCoronaryAtheroscleroticDisease"
-        journal: "European Heart Journal - Cardiovascular Pharmacotherapy"
-  # To Be Done
-#  aha:
-#    guidelines:
-#      2023-AHA-Guideline-Management-CCD:
-#        url: "https://www.jacc.org/doi/10.1016/j.jacc.2023.04.003"
-#        abbreviation: "2023AHAGuidelineCCD"
-#        journal: "Journal of the American College of Cardiology"
-#    consensus:
-#      2023-ACC-Consensus-Decision-Pathway-Management-Heart-Failure-Preserved-Ejection-Fraction:
-#        url: "https://www.jacc.org/doi/10.1016/j.jacc.2023.03.393"
-#        abbreviation: "2023ACCConsensusDecisionPathwayHFpEF"
-#        journal: "Journal of the American College of Cardiology"
-#    competence_and_training_statements:
-#      2023-ACC-Advanced-Training-Statement-Interventional-Cardiology:
-#        url: "https://www.jacc.org/doi/10.1016/j.jacc.2022.11.002"
-#        abbreviation: "2023ACCTrainingStatementInterventionalCardiology"
-#        journal: "Journal of the American College of Cardiology"
-#  # CSC- chinese society of cardiology
-#  cjc:
-#    guidelines:
-#      2018-Chinese-guidelines-diagnosis-treatment-heart-failure:
-#        url: "https://rs.yiigle.com/cmaid/1071728"
-#        abbreviation: "2018CJCGuidelinesHF"
-#        journal: "Chinese Journal of Cardiology"
+      2023-AHA-Guideline-Management-CCD:
+        url: "https://www.jacc.org/doi/10.1016/j.jacc.2023.04.003"
+        abbreviation: "2023AHAGuidelineCCD"
+        journal: "Journal of the American College of Cardiology"
+    consensus:
+      2023-ACC-Consensus-Decision-Pathway-Management-Heart-Failure-Preserved-Ejection-Fraction:
+        url: "https://www.jacc.org/doi/10.1016/j.jacc.2023.03.393"
+        abbreviation: "2023ACCConsensusDecisionPathwayHFpEF"
+        journal: "Journal of the American College of Cardiology"
+    competence_and_training_statements:
+      2023-ACC-Advanced-Training-Statement-Interventional-Cardiology:
+        url: "https://www.jacc.org/doi/10.1016/j.jacc.2022.11.002"
+        abbreviation: "2023ACCTrainingStatementInterventionalCardiology"
+        journal: "Journal of the American College of Cardiology"
+  # CSC- chinese society of cardiology
+  cjc:
+    guidelines:
+      2018-Chinese-guidelines-diagnosis-treatment-heart-failure:
+        url: "https://rs.yiigle.com/cmaid/1071728"
+        abbreviation: "2018CJCGuidelinesHF"
+        journal: "Chinese Journal of Cardiology"
 journal_mapping:
   oxford_type_1: ["European Heart Journal - Cardiovascular Pharmacotherapy",
                   "European Heart Journal. Acute Cardiovascular Care",

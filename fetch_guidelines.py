@@ -3,31 +3,58 @@ import os
 import bs4
 import yaml
 import re
-from parse_oxford_type_1 import parse_oxford_type_1_dom
+from selenium import webdriver
+import time
+# from parse_oxford_type_1 import parse_oxford_type_1_dom
 from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path
+from selenium.webdriver.chrome.service import Service
 
-max_length = 2048
+chrome_driver_path = os.path.abspath('./resource/chromedriver-win64/chromedriver.exe')
+max_length = 4096
 
 
 def parse_dom(abbreviation, dom, header, doc_format_schema):
+    content_dict = {}
     if doc_format_schema == 'oxford_type_1':
-        content_dict = parse_oxford_type_1_dom(abbreviation, dom, header)
+        # content_dict = parse_oxford_type_1_dom(abbreviation, dom, header)
+        pass
     elif doc_format_schema == 'jacc_type_1':
         # TBD
-        raise ValueError('')
+        # raise ValueError('')
+        pass
     else:
         raise ValueError('')
     return content_dict
 
 
-def get_dom(name, url, header, cacher=None, use_cache=True):
+def get_dom(doc_format_schema, name, url, header, cacher=None, use_cache=True):
     cache_path = os.path.join(cacher, name + '.txt')
     if use_cache and os.path.exists(cache_path):
         with open(cache_path, 'r', encoding='utf-8-sig') as f:
             in_cache = True
             html = f.read()
     else:
-        html = request_get_with_sleep(url, headers=header).text
+        if doc_format_schema == 'oxford_type_1':
+            html = request_get_with_sleep(url, headers=header).text
+        elif doc_format_schema == 'jacc_type_1':
+            options = webdriver.ChromeOptions()
+            options.add_argument('--log-level=3')  # 将 Chrome 浏览器的日志等级设置为 3，表示只输出错误信息，不输出运行信息
+            options.add_experimental_option('useAutomationExtension', False)
+            options.add_experimental_option('excludeSwitches', ['enable-automation'])
+            options.add_argument('--ignore-certificate-errors')
+            # options.add_argument("--no-sandbox")
+            # options.add_argument("--headless")
+            # options.add_argument("--disable-dev-shm-usage")
+            service = Service(executable_path=chrome_driver_path)
+            driver = webdriver.Chrome(service=service, options=options)
+
+            driver.get(url)
+            time.sleep(5)
+            html = driver.page_source
+        elif doc_format_schema == 'cjc':
+            html = request_get_with_sleep(url, headers=header).text
+        else:
+            raise ValueError('')
         with open(cache_path, 'w', encoding='utf-8-sig') as f:
             f.write(html)
             in_cache = False
@@ -143,6 +170,48 @@ def get_header(schema):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                           "Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.57"
         }
+    elif schema == 'jacc_type_1':
+        header = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                      "image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+            "Cache-Control": "no-cache",
+            "Cookie": "MAID=akLWpo4MNzmFxRNfjyijLA==; _gid=GA1.2.1800897025.1697769581; hubspotutk=92b8479f5e12da307d"
+                      "15c7eed6304d27; __hssrc=1; JSESSIONID=5f19dc22-ddec-4092-acd7-c37b14bf8fd8; MACHINE_LAST_SEEN="
+                      "2023-10-19T22%3A08%3A20.616-07%3A00; __cf_bm=okB4mpXjEGTwYwLy4fTsgKtZlkAAtVjJCzPLpMqCIo0-16977"
+                      "78500-0-AQUePIqe4E7OE2ksJEkx3TqyCeOlljRdVkH3Efi/CCtWjQWjU9ncyM3RH742DQpnfR11qKjCixxqYL0qu2DPa4"
+                      "o=; _ga=GA1.1.1634842690.1697769578; cf_clearance=KCBY80A88N4tn6F.h28dh_dPlELFDdNHTLlF9nYvr2A"
+                      "-1697778503-0-1-518c9034.3aebb72e.2d4a7a98-0.2.1697778503; _ga_PT683VWCRG=GS1.1.1697778495.3.1"
+                      ".1697778517.38.0.0; __hstc=117268889.92b8479f5e12da307d15c7eed6304d27.1697769594527.1697772560"
+                      "830.1697778532124.3; __hssc=117268889.1.1697778532124; _4c_=jVLJbtswEP2VgOdIJimRIn0L0i0F2lOCHg"
+                      "1JHEuMZVGgGKtukH%2Fv0JbtLEBRHQjNmzfbm3kmUws9WTKpi6LQXFKu5TXZwH4ky2dSD%2FHdxefJd2RJ2hCGcblYTNOU"
+                      "PpZ1nTrfLIyzC0ZTRplcPB5hTjlPqUqLXJFrUjsDGMx0qlKBdviDVq4o%2Fg7emac6rMJ%2BiJQJqqvRbNBhYGdrWE3WhD"
+                      "bG5jm9oC3Ypg0Ia3lABx8ph9yT7Y2bXsVl%2FIKe4xSNcXd9AL%2BDPljX47zkJ2LfoPRh9aW03ZOHGbvblo3tm9n6fnN7"
+                      "O%2F9%2B7qAO3g3tfrSuc81%2Bxh%2B2lYeuK2ez8m4aIfZ423q3hSvGoiwu1vx16GxE08MavD%2FQ0BptiOVPIs8ILgZB"
+                      "13e2h%2BhKjq4BV0TinJ2ryy7G4VIxArvD0d5EIPz1ZvVw9ymKI7Nc5VxqXF48AKlFERu797ZpwP%2BA0DqDvHtfGhszlV"
+                      "1UOyb0YGC0TaxioqBobYIbzvDLNfl9PCslc82Kw1mFgDeENo0fMrw1832RtaLA%2BZonFGiW5EWVJUpUIjHAdaVqTSWL24"
+                      "05CypELoTKVK4xydDNOdi5ZKEyjW6ZzSXj8cwlh93M5pcGhdJCKp1%2FbPC4uIt4%2F4gWH6MNrGc6%2FS96fxLjlbjngZ"
+                      "UQuCeFPHuile%2F8OhNFVHU6CTI7ZJYp9oZ6QJC6O%2BdSlAOreZFk9Xqd5FJAUmmtEiYLzXSFm9E1eSUwzeJOT5IxdRz"
+                      "i5eUv",
+            "Pragma": "no-cache",
+            "Sec-Ch-Ua": "\"Chromium\";v=\"118\", \"Microsoft Edge\";v=\"118\", \"Not=A?Brand\";v=\"99\"",
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": "\"Windows\"",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.57"
+    }
+    elif schema == 'cjc':
+        header={
+            'Content-Type':'application/json',
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+                          " Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.57"
+        }
     else:
         raise ValueError('')
     return header
@@ -170,7 +239,7 @@ def main():
                 doc_format_schema = journal_mapping_dict[journal]
                 header = get_header(doc_format_schema)
 
-                dom, in_cache = get_dom(abbreviation, doc_url, header, cache_folder, use_cache=True)
+                dom, in_cache = get_dom(doc_format_schema, abbreviation, doc_url, header, cache_folder, use_cache=True)
                 content_dict = parse_dom(abbreviation, dom, header, doc_format_schema)
 
                 data_dict[society][doc_type][abbreviation] = content_dict

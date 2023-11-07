@@ -1,16 +1,12 @@
-from paddleocr import PPStructure, save_structure_res
-from paddleocr.ppstructure.recovery.recovery_to_doc import sorted_layout_boxes, convert_info_docx
-from unstructured.partition.docx import partition_docx
 import os
 import bs4
 from docx.exceptions import InvalidSpanError
-import cv2
 import re
 from bs4.element import Tag
 from util import logger
 from util import sep
 from util import oxford_type_1_href_root as href_root
-from util import request_get_with_sleep, cache_folder
+from util import request_get_with_sleep, cache_folder, table_figure_ocr
 
 
 def is_section(ele):
@@ -124,26 +120,6 @@ def get_figure_content(ele, header, abbreviation):
 #         new_fig.paste(img, (0, y_offset))
 #         y_offset += img.height
 #     return new_fig
-
-def table_figure_ocr(figure_path, table_cache_folder, idx):
-    table_engine = PPStructure(show_log=False)
-    img = cv2.imread(figure_path)
-    result = table_engine(img)
-    h, w, _ = img.shape
-    docx_name = 'table_{}_ocr.docx'.format(idx)
-
-    save_structure_res(result, table_cache_folder, 'table_{}'.format(idx))
-    res = sorted_layout_boxes(result, w)
-    convert_info_docx(img, res, table_cache_folder, "table_{}".format(idx))
-    with open(os.path.join(table_cache_folder, docx_name), "rb") as f:
-        elements = partition_docx(file=f)
-    table_str = ''
-    for element in elements:
-        if element.category == 'Table':
-            table_str += element.metadata.text_as_html + " " + sep
-        else:
-            table_str += element.text + " " + sep
-    return table_str
 
 
 def get_table_content(ele, header, abbreviation):
@@ -266,6 +242,8 @@ def parse_oxford_type_1_dom(abbreviation, dom, header):
                     {'text': [], 'figure': {}, "table": {}}
         elif is_subsubsubsubsection(item):
             logger.info('Subsubsubsection: {}'.format(item.text))
+            content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['text']\
+                .append("\n{}\n".format(item.text))
         elif is_list(item):
             content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['text'].append(item.text)
         elif is_paragraph(item):

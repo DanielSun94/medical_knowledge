@@ -3,25 +3,20 @@ import os
 import bs4
 import yaml
 import re
-from selenium import webdriver
-import time
-# from parse_oxford_type_1 import parse_oxford_type_1_dom
-from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path
-from selenium.webdriver.chrome.service import Service
 
-chrome_driver_path = os.path.abspath('./resource/chromedriver-win64/chromedriver.exe')
+from parse_oxford_type_1 import parse_oxford_type_1_dom
+from parse_jacc_type_1 import parse_jacc_type_1_dom
+from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path, request_jacc
+
 max_length = 4096
 
 
 def parse_dom(abbreviation, dom, header, doc_format_schema):
-    content_dict = {}
     if doc_format_schema == 'oxford_type_1':
-        # content_dict = parse_oxford_type_1_dom(abbreviation, dom, header)
+        content_dict = parse_oxford_type_1_dom(abbreviation, dom, header)
         pass
     elif doc_format_schema == 'jacc_type_1':
-        # TBD
-        # raise ValueError('')
-        pass
+        content_dict = parse_jacc_type_1_dom(abbreviation, dom)
     else:
         raise ValueError('')
     return content_dict
@@ -37,20 +32,7 @@ def get_dom(doc_format_schema, name, url, header, cacher=None, use_cache=True):
         if doc_format_schema == 'oxford_type_1':
             html = request_get_with_sleep(url, headers=header).text
         elif doc_format_schema == 'jacc_type_1':
-            options = webdriver.ChromeOptions()
-            options.add_argument('--log-level=3')  # 将 Chrome 浏览器的日志等级设置为 3，表示只输出错误信息，不输出运行信息
-            options.add_experimental_option('useAutomationExtension', False)
-            options.add_experimental_option('excludeSwitches', ['enable-automation'])
-            options.add_argument('--ignore-certificate-errors')
-            # options.add_argument("--no-sandbox")
-            # options.add_argument("--headless")
-            # options.add_argument("--disable-dev-shm-usage")
-            service = Service(executable_path=chrome_driver_path)
-            driver = webdriver.Chrome(service=service, options=options)
-
-            driver.get(url)
-            time.sleep(5)
-            html = driver.page_source
+            html = request_jacc(url).page_source
         elif doc_format_schema == 'cjc':
             html = request_get_with_sleep(url, headers=header).text
         else:
@@ -117,7 +99,6 @@ def content_postprocess(path, content_dict):
         csv.writer(f).writerows(data_to_write)
 
 
-
 def save_content(path, content_dict):
     head = ['society', 'doc_type', 'abbreviation_name', 'section', 'subsection', 'subsubsection', 'subsubsubsection',
             'data_type', 'key', 'content']
@@ -130,7 +111,8 @@ def save_content(path, content_dict):
                     for subsec in doc_content[sec]:
                         for subsubsec in doc_content[sec][subsec]:
                             for subsubsubsec in doc_content[sec][subsec][subsubsec]:
-                                paragraph_list = doc_content[sec][subsec][subsubsec][subsubsubsec]['text']
+                                subsubsubsec_content = doc_content[sec][subsec][subsubsec][subsubsubsec]
+                                paragraph_list = subsubsubsec_content['text']
                                 for i, paragraph in enumerate(paragraph_list):
                                     data_to_write.append([society, doc_type, abbreviation, sec, subsec, subsubsec,
                                                           subsubsubsec, 'text', i, paragraph.replace('\n', '')])

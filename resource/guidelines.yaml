@@ -85,12 +85,12 @@ documents:
         abbreviation: "2023ACCTrainingStatementInterventionalCardiology"
         journal: "Journal of the American College of Cardiology"
   # CSC- chinese society of cardiology
-  cjc:
-    guidelines:
-      2018-Chinese-guidelines-diagnosis-treatment-heart-failure:
-        url: "https://rs.yiigle.com/cmaid/1071728"
-        abbreviation: "2018CJCGuidelinesHF"
-        journal: "Chinese Journal of Cardiology"
+#  cjc:
+#    guidelines:
+#      2018-Chinese-guidelines-diagnosis-treatment-heart-failure:
+#        url: "https://rs.yiigle.com/cmaid/1071728"
+#        abbreviation: "2018CJCGuidelinesHF"
+#        journal: "Chinese Journal of Cardiology"
 journal_mapping:
   oxford_type_1: ["European Heart Journal - Cardiovascular Pharmacotherapy",
                   "European Heart Journal. Acute Cardiovascular Care",

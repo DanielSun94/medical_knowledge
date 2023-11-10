@@ -59,6 +59,26 @@ def request_get_with_sleep(url, headers=None, sleep_time=10):
     return response
 
 
+def remove_style(ele):
+    ele.attrs = {}
+    for tag in ele.findAll(True):
+        tag.attrs = {}
+    return ele
+
+
+def request_cjc(url, sleep=10):
+    options = webdriver.ChromeOptions()
+    options.add_argument('--log-level=3')  # 将 Chrome 浏览器的日志等级设置为 3，表示只输出错误信息，不输出运行信息
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_experimental_option('excludeSwitches', ['enable-automation'])
+    options.add_argument('--ignore-certificate-errors')
+    service = Service(executable_path=chrome_driver_path)
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.get(url)
+    time.sleep(sleep)
+    return driver
+
+
 def table_figure_ocr(figure_path, table_cache_folder, idx):
     table_engine = PPStructure(show_log=False)
     img = cv2.imread(figure_path)

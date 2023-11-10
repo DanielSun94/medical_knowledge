@@ -1,6 +1,6 @@
 import os
 from util import logger
-from util import cache_folder, table_figure_ocr, request_jacc, sanitize_windows_path
+from util import cache_folder, table_figure_ocr, request_jacc, sanitize_windows_path, remove_style
 
 root_href = 'https://www.jacc.org'
 
@@ -132,13 +132,6 @@ def is_table(ele, abbreviation):
     with open(os.path.join(table_cache_folder, 'table_title.txt'), 'w', encoding='utf-8-sig') as f:
         f.write(table_title)
     return table_title, content_str
-
-
-def remove_style(ele):
-    ele.attrs = {}
-    for tag in ele.findAll(True):
-        tag.attrs = {}
-    return ele
 
 
 def is_figure(ele, abbreviation):

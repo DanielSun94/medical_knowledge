@@ -103,7 +103,7 @@ def get_figure_content(ele, header, abbreviation):
             f.write(figure_caption)
         with open(os.path.join(figure_cache_folder, 'name.txt'), 'w', encoding='utf-8-sig') as f:
             f.write(figure_name)
-    return figure, figure_caption, figure_name
+    return figure_name, figure_caption, figure
 
 
 # 效果不好，不用了
@@ -253,8 +253,8 @@ def parse_oxford_type_1_dom(abbreviation, dom, header):
             content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['table'][caption] = table_content
             logger.info('Table Caption: {}'.format(caption))
         elif is_figure(item):
-            fig, fig_caption, fig_name = get_figure_content(item, header, abbreviation)
-            content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['figure'][fig_name] = fig_name
+            fig_name, fig_caption, fig = get_figure_content(item, header, abbreviation)
+            content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['figure'][fig_name] = fig_caption
             logger.info(fig_name)
         else:
             if isinstance(item, Tag) and hasattr(item, 'name') and item.name != 'a':

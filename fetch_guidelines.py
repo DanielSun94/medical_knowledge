@@ -3,10 +3,10 @@ import os
 import bs4
 import yaml
 import re
-
+from parse_cjc_type_1 import parse_cjc_type_1_dom
 from parse_oxford_type_1 import parse_oxford_type_1_dom
 from parse_jacc_type_1 import parse_jacc_type_1_dom
-from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path, request_jacc
+from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path, request_jacc, request_cjc
 
 max_length = 4096
 
@@ -17,6 +17,8 @@ def parse_dom(abbreviation, dom, header, doc_format_schema):
         pass
     elif doc_format_schema == 'jacc_type_1':
         content_dict = parse_jacc_type_1_dom(abbreviation, dom)
+    elif doc_format_schema == 'cjc_type_1':
+        content_dict = parse_cjc_type_1_dom(abbreviation, dom)
     else:
         raise ValueError('')
     return content_dict
@@ -33,8 +35,8 @@ def get_dom(doc_format_schema, name, url, header, cacher=None, use_cache=True):
             html = request_get_with_sleep(url, headers=header).text
         elif doc_format_schema == 'jacc_type_1':
             html = request_jacc(url).page_source
-        elif doc_format_schema == 'cjc':
-            html = request_get_with_sleep(url, headers=header).text
+        elif doc_format_schema == 'cjc_type_1':
+            html = request_cjc(url).page_source
         else:
             raise ValueError('')
         with open(cache_path, 'w', encoding='utf-8-sig') as f:
@@ -188,8 +190,8 @@ def get_header(schema):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                           "(KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.57"
     }
-    elif schema == 'cjc':
-        header={
+    elif schema == 'cjc_type_1':
+        header = {
             'Content-Type':'application/json',
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
                           " Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.57"
@@ -220,10 +222,8 @@ def main():
                 abbreviation = documents[society][doc_type][doc_name]['abbreviation']
                 doc_format_schema = journal_mapping_dict[journal]
                 header = get_header(doc_format_schema)
-
                 dom, in_cache = get_dom(doc_format_schema, abbreviation, doc_url, header, cache_folder, use_cache=True)
                 content_dict = parse_dom(abbreviation, dom, header, doc_format_schema)
-
                 data_dict[society][doc_type][abbreviation] = content_dict
 
     save_content(save_path, data_dict)

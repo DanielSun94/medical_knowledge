@@ -1,5 +1,5 @@
 documents:
-  # To Be Done，主要是做文献拓展
+#   To Be Done，主要是做文献拓展
   esc:
     guidelines:
       2023-ESC-guideline-cardiovascular-disease-patients-diabetes:
@@ -106,7 +106,7 @@ documents:
         url: "https://academic.oup.com/eurheartj/article/39/9/763/4095038"
         abbreviation: "2017EscGuidelinePeripheralArterialDisease"
         journal: "European Heart Journal"
-      2018-ESC-guideline-pericardial-disease:
+      2015-ESC-guideline-pericardial-disease:
         url: "https://academic.oup.com/eurheartj/article/36/42/2921/2293375"
         abbreviation: "2015EscGuidelinePericardialDisease"
         journal: "European Heart Journal"

@@ -1,3 +1,5 @@
+import copy
+
 from util import logger, remove_style, cache_folder, request_get_with_sleep
 import os
 
@@ -25,11 +27,22 @@ def parse_cjc_type_1_dom(abbreviation, dom):
     target_folder = os.path.join(cache_folder, abbreviation)
     os.makedirs(target_folder, exist_ok=True)
 
+    unidentified_number = UnidentifiedNumber()
     for item in content_list[start_idx:]:
         if is_section_ele(item):
             sec_name = parse_section_name(item)
-            content_dict[sec_name] = parse_section(item, target_folder)
+            content_dict[sec_name] = parse_section(item, target_folder, unidentified_number)
     return content_dict
+
+
+class UnidentifiedNumber(object):
+    def __init__(self):
+        self.number = 0
+
+    def get_next(self):
+        self.number += 1
+        number = copy.deepcopy(self.number)
+        return number
 
 
 def is_section_ele(ele):
@@ -125,6 +138,8 @@ def is_paragraph(ele):
     if ele.name == 'p' or (ele.name == 'div' and isinstance(ele.attrs, dict) and 'class' in ele.attrs
                            and 'p' in ele.attrs['class']):
         return True
+    elif ele.name == 'div' and 'class' in ele.attrs and 'boxed-text' in ele.attrs['class']:
+        return True
     else:
         return False
 
@@ -141,18 +156,21 @@ def is_table(ele):
         return False
 
 
-def parse_table(ele):
-    table_label_ele = ele.find('div', attrs={'class': 'table-wrap-foot'})
-    label = table_label_ele.find('label').text
-    caption = table_label_ele.find('span').text
+def parse_table(ele, unidentified_number_obj):
+    try:
+        table_label_ele = ele.find('div', attrs={'class': 'table-wrap-foot'})
+        label = table_label_ele.find('label').text
+        caption = table_label_ele.find('span').text
+    except Exception:
+        label = 'Unidentified Table with id {}'.format(unidentified_number_obj.get_next())
+        caption = ''
 
     table_box = ele.find('table')
     table_text = remove_style(table_box).prettify()
-
     return label, caption, table_text
 
 
-def parse_subsubsubsection(ele, target_folder):
+def parse_subsubsubsection(ele, target_folder, unidentified_number):
     item_list = ele.contents
     content_dict = {'text': [], 'figure': {}, "table": {}}
 
@@ -165,7 +183,7 @@ def parse_subsubsubsection(ele, target_folder):
             paragraph = parse_paragraph(item)
             content_dict['text'].append(paragraph)
         elif is_table(item):
-            label, caption, table_text = parse_table(item)
+            label, caption, table_text = parse_table(item, unidentified_number)
             content_dict['table'][label] = caption + "\n" + table_text
         elif is_figure(item):
             label, caption, figure = parse_figure(item, target_folder)
@@ -176,7 +194,7 @@ def parse_subsubsubsection(ele, target_folder):
     return content_dict
 
 
-def parse_subsubsection(item, target_folder):
+def parse_subsubsection(item, target_folder, unidentified_number):
     item_list = item.contents
     content_dict = {none_str: {'text': [], 'figure': {}, "table": {}}}
 
@@ -188,12 +206,12 @@ def parse_subsubsection(item, target_folder):
 
         if is_subsubsubsection(item):
             subsubsubsection_name = parse_subsubsubsection_name(item, default_name)
-            content_dict[subsubsubsection_name] = parse_subsubsubsection(item, target_folder)
+            content_dict[subsubsubsection_name] = parse_subsubsubsection(item, target_folder, unidentified_number)
         elif is_paragraph(item):
             paragraph = parse_paragraph(item)
             content_dict[none_str]['text'].append(paragraph)
         elif is_table(item):
-            label, caption, table_text = parse_table(item)
+            label, caption, table_text = parse_table(item, unidentified_number)
             content_dict[none_str]['table'][label] = caption + "\n" + table_text
         elif is_figure(item):
             label, caption, figure = parse_figure(item, target_folder)
@@ -235,7 +253,7 @@ def parse_figure(item, target_folder):
     return label, caption, figure
 
 
-def parse_subsection(ele, target_folder):
+def parse_subsection(ele, target_folder, unidentified_number):
     item_list = ele.contents
     content_dict = {none_str: {none_str: {'text': [], 'figure': {}, "table": {}}}}
 
@@ -246,12 +264,12 @@ def parse_subsection(ele, target_folder):
             continue
         if is_subsubsection_ele(item):
             subsubsection_name = parse_subsubsection_name(item, default_name)
-            content_dict[subsubsection_name] = parse_subsubsection(item, target_folder)
+            content_dict[subsubsection_name] = parse_subsubsection(item, target_folder, unidentified_number)
         elif is_paragraph(item):
             paragraph = parse_paragraph(item)
             content_dict[none_str][none_str]['text'].append(paragraph)
         elif is_table(item):
-            label, caption, table_text = parse_table(item)
+            label, caption, table_text = parse_table(item, unidentified_number)
             content_dict[none_str][none_str]['table'][label] = caption + "\n" + table_text
         elif is_figure(item):
             label, caption, figure = parse_figure(item, target_folder)
@@ -262,7 +280,7 @@ def parse_subsection(ele, target_folder):
     return content_dict
 
 
-def parse_section(ele, target_folder):
+def parse_section(ele, target_folder, unidentified_number):
     content_list = ele.contents
 
     content_dict = {none_str: {none_str: {none_str: {'text': [], 'figure': {}, "table": {}}}}}
@@ -274,12 +292,12 @@ def parse_section(ele, target_folder):
             continue
         if is_subsection_ele(item):
             sub_section_name = parse_subsection_name(item, default_sub_sec_name)
-            content_dict[sub_section_name] = parse_subsection(item, target_folder)
+            content_dict[sub_section_name] = parse_subsection(item, target_folder, unidentified_number)
         elif is_paragraph(item):
             paragraph = parse_paragraph(item)
             content_dict[none_str][none_str][none_str]['text'].append(paragraph)
         elif is_table(item):
-            label, caption, table_text = parse_table(item)
+            label, caption, table_text = parse_table(item, unidentified_number)
             content_dict[none_str][none_str][none_str]['table'][label] = caption + "\n" + table_text
         elif is_figure(item):
             label, caption, figure = parse_figure(item, target_folder)

@@ -1,5 +1,7 @@
 import os
-from util import logger
+from docx.exceptions import InvalidSpanError
+from bs4 import NavigableString
+from util import logger, remove_non_gbk_characters
 from util import cache_folder, table_figure_ocr, request_jacc, sanitize_windows_path, remove_style
 
 root_href = 'https://www.jacc.org'
@@ -53,6 +55,13 @@ def is_subsubsubsubsection(ele):
 def is_paragraph(ele):
     if hasattr(ele, 'name') and ele.name == 'p':
         return ele.text
+    elif isinstance(ele, NavigableString):
+        return str(ele.encode('utf-8'))
+    elif hasattr(ele, 'name') and ele.name == 'div' and isinstance(ele.attrs, dict) and 'class' in ele.attrs and \
+        'quote' in ele.attrs['class']:
+        return ele.text
+    elif hasattr(ele, 'name') and ele.name == 'section':
+        return ele.text
     else:
         return None
 
@@ -65,7 +74,7 @@ def is_list(ele):
         return None
 
 
-def is_table(ele, abbreviation):
+def is_table(ele, abbreviation, re_ocr):
     flag_1 = hasattr(ele, 'name') and ele.name == 'div' and isinstance(ele.attrs, dict) and 'class' in ele.attrs and \
              'article-table-content' in ele.attrs['class']
     caption_ele = ele.find('caption')
@@ -80,16 +89,16 @@ def is_table(ele, abbreviation):
     foot_ele = ele.find('div', attrs={'class': 'tableFooter'})
     table_label_ele = caption_ele.find('span', attrs={'class': 'captionLabel'})
     if table_label_ele is not None:
-        table_title = table_label_ele.text
+        table_title = remove_non_gbk_characters(table_label_ele.text)
     else:
-        table_title = sanitize_windows_path(caption_ele.text[0:50], "_")
+        table_title = remove_non_gbk_characters(sanitize_windows_path(caption_ele.text[0:50], "_"))
 
     table_cache_folder = os.path.join(cache_folder, abbreviation, table_title)
-    if os.path.exists(table_cache_folder):
+    if os.path.exists(table_cache_folder) and not re_ocr:
         with open(os.path.join(table_cache_folder, 'table_title.txt'), 'r', encoding='utf-8-sig') as f:
-            table_title = f.read()
+            table_title = remove_non_gbk_characters(f.read())
         with open(os.path.join(table_cache_folder, 'table_content.txt'), 'r', encoding='utf-8-sig') as f:
-            content_str = f.read()
+            content_str = remove_non_gbk_characters(f.read())
         return table_title, content_str
 
     if caption_ele is not None:
@@ -109,20 +118,19 @@ def is_table(ele, abbreviation):
             if not os.path.exists(figure_folder):
                 os.makedirs(figure_folder)
                 # 存在跨页表
-                for j, url in enumerate(figure_urls):
+            for j, url in enumerate(figure_urls):
+                target_path = os.path.join(figure_folder, '{}.jpg'.format(j + 1))
+                if not os.path.exists(target_path):
                     driver = request_jacc(url)
                     driver.maximize_window()
-                    driver.save_screenshot(os.path.join(figure_folder, '{}.jpg'.format(j + 1)))
+                    driver.save_screenshot(target_path)
 
-            figure_name_list = os.listdir(figure_folder)
-            table_str_list = [caption]
-            for file_name in figure_name_list:
-                idx = file_name.strip().split('.')[0]
-                figure_path = os.path.join(figure_folder, file_name)
-                table_str_list.append(table_figure_ocr(figure_path, table_cache_folder, idx))
-            table_str_list.append(head)
+            figure_name_list = [item for item in os.listdir(figure_folder) if '.txt' not in item]
+            table_str_list = [caption, head]
+            content_str_list = table_ocr(figure_name_list, figure_folder, table_cache_folder, table_title)
+            table_str_list = table_str_list + content_str_list
             table_str_list.append(foot)
-            content_str = '\n'.join(table_str_list)
+            content_str = remove_non_gbk_characters('\n'.join(table_str_list))
     else:
         content_str = ""
 
@@ -132,6 +140,21 @@ def is_table(ele, abbreviation):
     with open(os.path.join(table_cache_folder, 'table_title.txt'), 'w', encoding='utf-8-sig') as f:
         f.write(table_title)
     return table_title, content_str
+
+
+def table_ocr(figure_name_list, figure_folder, table_cache_folder, table_title):
+    table_str_list = []
+    for file_name in figure_name_list:
+        idx = file_name.strip().split('.')[0]
+        figure_path = os.path.join(figure_folder, file_name)
+        try:
+            table_str_list.append(table_figure_ocr(figure_path, table_cache_folder, idx))
+        # 这里有时候会莫名出现错误
+        except IndexError:
+            logger.error('{} OCR failed '.format(table_title))
+        except InvalidSpanError:
+            logger.error('{} OCR failed '.format(table_title))
+    return table_str_list
 
 
 def is_figure(ele, abbreviation):
@@ -144,13 +167,13 @@ def is_figure(ele, abbreviation):
     if caption_ele is None or full_caption_ele is None:
         return None
 
-    caption = caption_ele.text
+    caption = remove_non_gbk_characters(caption_ele.text)
 
     figure_cache_folder = os.path.join(cache_folder, abbreviation, caption)
     if not os.path.exists(figure_cache_folder):
         full_caption = full_caption_ele.text
         figure_start_idx = full_caption.find('Figure')
-        full_caption = full_caption[figure_start_idx:]
+        full_caption = remove_non_gbk_characters(full_caption[figure_start_idx:])
 
         figure_url = root_href + ele.find('img', attrs={"class": 'figure__image'}).get('data-lg-src')
 
@@ -167,11 +190,11 @@ def is_figure(ele, abbreviation):
         with open(os.path.join(figure_cache_folder, 'figure.jpg'), 'rb') as f:
             figure = f.read()
         with open(os.path.join(figure_cache_folder, 'caption.txt'), 'r', encoding='utf-8-sig') as f:
-            full_caption = f.read()
+            full_caption = remove_non_gbk_characters(f.read())
     return caption, full_caption, figure
 
 
-def parse_jacc_type_1_dom(abbreviation, dom):
+def parse_jacc_type_1_dom(abbreviation, dom, re_ocr):
     doc_title = dom.find('h1').text
     content_div = dom.find('div', attrs={'class': 'hlFld-Fulltext'})
     content_list = content_div.contents
@@ -192,7 +215,7 @@ def parse_jacc_type_1_dom(abbreviation, dom):
         current_idx = next_idx
         item = content_list[current_idx]
         if is_section(item):
-            sec_ptr = is_section(item)
+            sec_ptr = remove_non_gbk_characters(is_section(item))
             logger.info('Section: {}'.format(sec_ptr))
             # 这个编号要看看是不是jacc都是这样
             subsec_ptr = none_str
@@ -202,7 +225,7 @@ def parse_jacc_type_1_dom(abbreviation, dom):
             next_idx += 2
 
         elif is_subsection(item):
-            subsec_ptr = is_subsection(item)
+            subsec_ptr = remove_non_gbk_characters(is_subsection(item))
             logger.info('Subsection: {}'.format(subsec_ptr))
             subsubsec_ptr = none_str
             subsubsubsec_ptr = none_str
@@ -211,7 +234,7 @@ def parse_jacc_type_1_dom(abbreviation, dom):
             next_idx += 2
 
         elif is_subsubsection(item):
-            subsubsec_ptr = is_subsubsection(item)
+            subsubsec_ptr = remove_non_gbk_characters(is_subsubsection(item))
             logger.info('Subsubsection: {}'.format(subsubsec_ptr))
             subsubsubsec_ptr = none_str
             if subsubsec_ptr not in content_dict[sec_ptr][subsec_ptr]:
@@ -219,7 +242,7 @@ def parse_jacc_type_1_dom(abbreviation, dom):
             next_idx += 2
 
         elif is_subsubsubsection(item):
-            subsubsubsec_ptr = is_subsubsubsection(item)
+            subsubsubsec_ptr = remove_non_gbk_characters(is_subsubsubsection(item))
             logger.info('Subsubsubsection: {}'.format(subsubsubsec_ptr))
             if subsubsubsec_ptr not in content_dict[sec_ptr][subsec_ptr][subsubsec_ptr]:
                 content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr] = \
@@ -227,7 +250,7 @@ def parse_jacc_type_1_dom(abbreviation, dom):
             next_idx += 2
 
         elif is_subsubsubsubsection(item):
-            subsubsubsection_ptr = is_subsubsubsection(item)
+            subsubsubsection_ptr = remove_non_gbk_characters(is_subsubsubsection(item))
             logger.info('Subsubsubsection: {}'.format(subsubsubsection_ptr))
             content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['text']\
                 .append("\n{}\n".format(subsubsubsection_ptr))
@@ -244,8 +267,8 @@ def parse_jacc_type_1_dom(abbreviation, dom):
             content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['text'].append(paragraph_text)
             next_idx += 1
 
-        elif is_table(item, abbreviation):
-            caption, table_str = is_table(item, abbreviation)
+        elif is_table(item, abbreviation, re_ocr):
+            caption, table_str = is_table(item, abbreviation, re_ocr)
             content_dict[sec_ptr][subsec_ptr][subsubsec_ptr][subsubsubsec_ptr]['table'][caption] = table_str
             logger.info('Table Caption: {}'.format(caption))
             next_idx += 1
@@ -265,9 +288,18 @@ def parse_jacc_type_1_dom(abbreviation, dom):
             f_5 = item.name == 'div' and isinstance(item.attrs, dict) and 'class' in item.attrs and \
                 'NLM_app-group' in item.attrs['class']
             f_6 = item == '\n'
-            if not (f_1 or f_2 or f_3 or f_4 or f_5 or f_6):
+            f_7 = 'footnote' in item.text.lower()
+            f_8 = item.name == 'a' and isinstance(item.attrs, dict) and 'class' in item.attrs and \
+                'tab-link' in item.attrs['class']
+            f_9 = (hasattr(item, 'name') and item.name == 'div' and isinstance(item.attrs, dict) and
+                   'class' in item.attrs and 'article-table-content' in item.attrs['class']) and \
+                  (item.find('caption') is None)
+            f_10 = item.name == 'a' and isinstance(item.attrs, dict) and 'class' in item.attrs and \
+                'showTableEvent' in item.attrs['class']
+            if not (f_4 or f_1 or f_3 or f_5 or f_6 or f_7 or f_2 or f_9 or f_8):
                 logger.info('UNKNOWN ITEM, Please Check')
                 logger.info(item)
-
-            next_idx += 1
+                next_idx += 1
+            else:
+                next_idx += 1
     return content_dict

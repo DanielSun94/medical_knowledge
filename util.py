@@ -7,6 +7,8 @@ from paddleocr.ppstructure.recovery.recovery_to_doc import sorted_layout_boxes, 
 from unstructured.partition.docx import partition_docx
 import cv2
 from selenium import webdriver
+from PIL import Image
+import numpy as np
 import time
 from selenium.webdriver.chrome.service import Service
 
@@ -30,17 +32,17 @@ for handler in logger.handlers[:]:
     logger.removeHandler(handler)
 
 file_handler = logging.FileHandler(log_file_name)
-file_handler.setLevel(logging.INFO)
 formatter = logging.Formatter(format_)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
+console_handler.setLevel(logging.INFO)
+file_handler.setLevel(logging.INFO)
 
 
-def request_jacc(url, sleep=10):
+def request_jacc(url, sleep=5):
     options = webdriver.ChromeOptions()
     options.add_argument('--log-level=3')  # 将 Chrome 浏览器的日志等级设置为 3，表示只输出错误信息，不输出运行信息
     options.add_experimental_option('useAutomationExtension', False)
@@ -66,7 +68,7 @@ def remove_style(ele):
     return ele
 
 
-def request_cjc(url, sleep=10):
+def request_cjc(url, sleep=5):
     options = webdriver.ChromeOptions()
     options.add_argument('--log-level=3')  # 将 Chrome 浏览器的日志等级设置为 3，表示只输出错误信息，不输出运行信息
     options.add_experimental_option('useAutomationExtension', False)
@@ -81,7 +83,13 @@ def request_cjc(url, sleep=10):
 
 def table_figure_ocr(figure_path, table_cache_folder, idx):
     table_engine = PPStructure(show_log=False)
-    img = cv2.imread(figure_path)
+    suffix = figure_path.strip().split(".")[-1]
+    if suffix == 'gif':
+        gif = Image.open(figure_path)
+        frame = np.array(gif)
+        img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    else:
+        img = cv2.imread(figure_path)
     result = table_engine(img)
     h, w, _ = img.shape
     docx_name = 'table_{}_ocr.docx'.format(idx)
@@ -98,6 +106,17 @@ def table_figure_ocr(figure_path, table_cache_folder, idx):
         else:
             table_str += element.text + " " + sep
     return table_str
+
+
+def remove_non_gbk_characters(s):
+    new_s = ''
+    for char in s:
+        try:
+            char.encode('gbk')
+            new_s += char
+        except UnicodeEncodeError:
+            new_s += ' '
+    return new_s.strip()
 
 
 def sanitize_windows_path(path: str, replacement: str = "_") -> str:

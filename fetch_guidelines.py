@@ -6,17 +6,17 @@ import re
 from parse_cjc_type_1 import parse_cjc_type_1_dom
 from parse_oxford_type_1 import parse_oxford_type_1_dom
 from parse_jacc_type_1 import parse_jacc_type_1_dom
-from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path, request_jacc, request_cjc
+from util import request_get_with_sleep, cache_folder, resource_path, save_path, post_file_path, request_jacc, \
+    request_cjc, logger
 
 max_length = 4096
 
 
-def parse_dom(abbreviation, dom, header, doc_format_schema):
+def parse_dom(abbreviation, dom, header, doc_format_schema, re_ocr):
     if doc_format_schema == 'oxford_type_1':
-        content_dict = parse_oxford_type_1_dom(abbreviation, dom, header)
-        pass
+        content_dict = parse_oxford_type_1_dom(abbreviation, dom, header, re_ocr)
     elif doc_format_schema == 'jacc_type_1':
-        content_dict = parse_jacc_type_1_dom(abbreviation, dom)
+        content_dict = parse_jacc_type_1_dom(abbreviation, dom, re_ocr)
     elif doc_format_schema == 'cjc_type_1':
         content_dict = parse_cjc_type_1_dom(abbreviation, dom)
     else:
@@ -202,6 +202,7 @@ def get_header(schema):
 
 
 def main():
+    re_ocr = False
     os.makedirs(cache_folder, exist_ok=True)
     with open(resource_path, 'r', encoding='utf-8-sig') as f:
         resource = yaml.load(f, yaml.FullLoader)
@@ -211,20 +212,34 @@ def main():
             for source in journal_mapping[target]:
                 journal_mapping_dict[source] = target
 
-    data_dict = dict()
+    item_list = []
     for society in documents:
-        data_dict[society] = dict()
         for doc_type in documents[society]:
-            data_dict[society][doc_type] = dict()
             for doc_name in documents[society][doc_type]:
-                doc_url = documents[society][doc_type][doc_name]['url']
-                journal = documents[society][doc_type][doc_name]['journal']
                 abbreviation = documents[society][doc_type][doc_name]['abbreviation']
-                doc_format_schema = journal_mapping_dict[journal]
-                header = get_header(doc_format_schema)
-                dom, in_cache = get_dom(doc_format_schema, abbreviation, doc_url, header, cache_folder, use_cache=True)
-                content_dict = parse_dom(abbreviation, dom, header, doc_format_schema)
-                data_dict[society][doc_type][abbreviation] = content_dict
+                item_list.append([society, doc_type, doc_name, abbreviation])
+    # random.shuffle(item_list)
+    data_dict = dict() 
+    for item in item_list:
+        society, doc_type, doc_name, abbreviation = item
+        if society not in data_dict:
+            data_dict[society] = dict()
+        if doc_type not in data_dict[society]:
+            data_dict[society][doc_type] = dict()
+        if doc_name not in data_dict[society][doc_type]:
+            data_dict[society][doc_type][abbreviation] = dict()
+        doc_url = documents[society][doc_type][doc_name]['url']
+        journal = documents[society][doc_type][doc_name]['journal']
+        doc_format_schema = journal_mapping_dict[journal]
+        header = get_header(doc_format_schema)
+
+        for i in range(5):
+            logger.info('')
+        logger.info("{}  {}".format(journal, abbreviation))
+
+        dom, in_cache = get_dom(doc_format_schema, abbreviation, doc_url, header, cache_folder, use_cache=True)
+        content_dict = parse_dom(abbreviation, dom, header, doc_format_schema, re_ocr)
+        data_dict[society][doc_type][abbreviation] = content_dict
 
     save_content(save_path, data_dict)
     content_postprocess(post_file_path, data_dict)
